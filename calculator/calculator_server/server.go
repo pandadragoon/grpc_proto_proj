@@ -3,8 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
+	"math"
 	"net"
 
 	"github.com/pandadragoon/grpc-go-course/calculator/calculatorpb"
@@ -106,6 +110,24 @@ func (*server) FindMaximum(stream calculatorpb.CalculatorService_FindMaximumServ
 	return nil
 }
 
+func (*server) SquareRoot(ctx context.Context, req *calculatorpb.SquareRootRequest) (*calculatorpb.SquareRootResponse, error) {
+	fmt.Println("Received SquareRoot RPC")
+	number := req.GetNumber()
+	if number < 0 {
+		return nil, status.Errorf(
+				codes.InvalidArgument,
+				fmt.Sprintf("Received a negative number: %d", number),
+			)
+	}
+	numberRoot := math.Sqrt(float64(number))
+
+	res := calculatorpb.SquareRootResponse{
+		NumberRoot: numberRoot,
+	}
+
+	return &res, nil
+}
+
 func main() {
 	fmt.Println("Calculator Server")
 	lis, err := net.Listen("tcp", "0.0.0.0:50051")
@@ -117,6 +139,7 @@ func main() {
 	s := grpc.NewServer()
 
 	calculatorpb.RegisterCalculatorServiceServer(s, &server{})
+	reflection.Register(s)
 
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Unable to serve: %v", err)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pandadragoon/grpc-go-course/calculator/calculatorpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
 	"time"
@@ -25,7 +26,8 @@ func main() {
 	//doUnary(c)
 	//doServerStreaming(c)
 	//doClientStreaming(c)
-	doBiDiStreaming(c)
+	//doBiDiStreaming(c)
+	doErrorUnary(c)
 }
 
 func doUnary(c calculatorpb.CalculatorServiceClient) {
@@ -176,4 +178,22 @@ func doBiDiStreaming(c calculatorpb.CalculatorServiceClient) {
 	}()
 
 	<-waitc
+}
+
+func doErrorUnary(ctx calculatorpb.CalculatorServiceClient) {
+	req := calculatorpb.SquareRootRequest{Number: 25}
+	res, err := ctx.SquareRoot(context.Background(), &req)
+	if err != nil {
+		respErr, ok := status.FromError(err)
+		if ok {
+			log.Printf(" %v : %v.", respErr.Code(), respErr.Message())
+		} else {
+			log.Fatalf("Big error calling SquareRoot Server: %v", err)
+		}
+
+		return
+	}
+
+	numberRoot := res.GetNumberRoot()
+	log.Printf("received number root %f", numberRoot)
 }
