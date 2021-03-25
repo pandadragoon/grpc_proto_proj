@@ -10,6 +10,21 @@ message Blog {
     string content = 4;
 }
 
+message CreateBlogRequest {
+    Blog blog = 1;
+};
+message CreateBlogResponse {
+    Blog blog = 1;
+};
+
+message ReadBlogRequest {
+    string blog_id = 1;
+}
+message ReadBlogResponse {
+    Blog blog = 1;
+}
+
 service BlogService {
-    
+    rpc CreateBlog(CreateBlogRequest) returns (CreateBlogResponse) {};
+    rpc ReadBlog(ReadBlogRequest) returns (ReadBlogResponse) {};
 }
